@@ -147,6 +147,80 @@ export const MenuLogic = {
                 h: 400
             }
         })
+    },
+
+    rotateSelection: (editor: Editor, degrees: number) => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+
+        const radians = (degrees * Math.PI) / 180
+        
+        editor.updateShapes(selectedIds.map(id => {
+            const shape = editor.getShape(id) as any
+            return {
+                id,
+                type: shape.type,
+                rotation: (shape.rotation || 0) + radians
+            }
+        }))
+    },
+
+    flipSelection: (editor: Editor, direction: 'horizontal' | 'vertical') => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+        editor.flipShapes(selectedIds, direction)
+    },
+
+    stackSelection: (editor: Editor, action: 'front' | 'back' | 'forward' | 'backward') => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+
+        switch (action) {
+            case 'front': editor.bringToFront(selectedIds); break
+            case 'back': editor.sendToBack(selectedIds); break
+            case 'forward': editor.bringForward(selectedIds); break
+            case 'backward': editor.sendBackward(selectedIds); break
+        }
+    },
+
+    alignSelection: (editor: Editor, alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-horizontal' | 'center-vertical') => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length < 2) return
+        editor.alignShapes(selectedIds, alignment)
+    },
+
+    distributeSelection: (editor: Editor, axis: 'horizontal' | 'vertical') => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length < 3) return
+        editor.distributeShapes(selectedIds, axis)
+    },
+
+    toggleLock: (editor: Editor) => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+        editor.toggleLock(selectedIds)
+    },
+
+    duplicateSelection: (editor: Editor) => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+        editor.duplicateShapes(selectedIds)
+    },
+
+    groupSelection: (editor: Editor) => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+        editor.groupShapes(selectedIds)
+    },
+
+    ungroupSelection: (editor: Editor) => {
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length === 0) return
+        editor.ungroupShapes(selectedIds)
+    },
+
+    selectAll: (editor: Editor) => {
+        editor.selectAll()
     }
 }
 
@@ -170,11 +244,14 @@ function svgToBlob(svg: SVGSVGElement, mimeType: string): Promise<Blob | null> {
 
         image.onload = () => {
             const canvas = document.createElement('canvas')
-            canvas.width = image.width
-            canvas.height = image.height
+            const scale = 2
+            canvas.width = image.width * scale
+            canvas.height = image.height * scale
             const ctx = canvas.getContext('2d')
             if (!ctx) return resolve(null)
             
+            ctx.scale(scale, scale)
+
             if (mimeType === 'image/jpeg') {
                 ctx.fillStyle = '#ffffff'
                 ctx.fillRect(0, 0, canvas.width, canvas.height)

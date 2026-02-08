@@ -282,8 +282,7 @@ export default function App() {
                     </div>
                 ) : (
                     <Tldraw 
-                        // MUDANÇA CRUCIAL: v8 para limpar dados antigos com 'justify'
-                        persistenceKey={`jiukisidian-v8-fix-${currentProjectId}`}
+                        persistenceKey={`jiukisidian-v10-clean-${currentProjectId}`}
                         shapeUtils={customShapeUtils}
                         options={options}
                         hideUi={false}

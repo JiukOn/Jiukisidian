@@ -1,155 +1,117 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { useEditor, track } from 'tldraw'
+import { useEditor, useValue, track } from 'tldraw'
 import { 
     MousePointer2, Hand, Eraser, Pen, Highlighter, 
     StickyNote, Square, Circle, Triangle, Star, Diamond,
     Type, Undo2, Redo2, Trash2, Download, ZoomIn, ZoomOut, 
     Image as ImageIcon, MoveRight, Minus, Wand2,
-    Sun, Moon, Monitor, Heart, ChevronDown, Check
+    Sun, Moon, Monitor, Heart, RotateCcw, RotateCw
 } from 'lucide-react'
-import { MenuLogic } from './MenuLogic'
+import { MenuLogic } from '../utils/MenuLogic'
 import JiukLogo from '../assets/logo.svg'
 
-export const TopCommandBar = track(() => {
-    const editor = useEditor()
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    
-    const [isMainMenuOpen, setMainMenuOpen] = useState(false)
-    const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-    const [uiSize, setUiSize] = useState(32)
+const ToolbarItem = ({ 
+    active, 
+    onClick, 
+    children, 
+    title, 
+    dropdownContent,
+    onDropdownSelect 
+}: { 
+    active?: boolean; 
+    onClick?: () => void; 
+    children: React.ReactNode; 
+    title: string;
+    dropdownContent?: React.ReactNode;
+    onDropdownSelect?: () => void;
+}) => {
+    const [isOpen, setIsOpen] = useState(false)
+    const timeoutRef = useRef<any>(null)
 
-    const activeTool = editor.getCurrentToolId()
+    const handleMouseEnter = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        if (dropdownContent) setIsOpen(true)
+    }
 
-    useEffect(() => {
-        MenuLogic.setUiScale(uiSize as any)
-    }, [uiSize])
+    const handleMouseLeave = () => {
+        timeoutRef.current = setTimeout(() => {
+            setIsOpen(false)
+        }, 200) 
+    }
 
-    useEffect(() => {
-        const closeMenus = () => {
-            setMainMenuOpen(false)
-            setActiveDropdown(null)
-        }
-        document.querySelector('.tl-canvas')?.addEventListener('pointerdown', closeMenus)
-        return () => document.querySelector('.tl-canvas')?.removeEventListener('pointerdown', closeMenus)
-    }, [])
-
-    const setTool = (id: string) => editor.setCurrentTool(id)
-
-    const MainMenu = () => (
+    return (
         <div 
-            style={{position: 'relative', height: '100%', display: 'flex', alignItems: 'center'}}
-            onMouseEnter={() => setMainMenuOpen(true)}
-            onMouseLeave={() => setMainMenuOpen(false)}
+            style={{position: 'relative', height: '100%', display: 'flex', alignItems: 'center'}} 
+            onMouseEnter={handleMouseEnter} 
+            onMouseLeave={handleMouseLeave}
         >
-            <button 
-                className={`jiuk-icon-btn ${isMainMenuOpen ? 'active' : ''}`} 
-                title="Menu Principal"
-                style={{ padding: 4 }}
+            <button
+                className={`jiuk-icon-btn ${active ? 'active' : ''}`}
+                onClick={onClick}
+                title={title}
             >
-                <img 
-                    src={JiukLogo} 
-                    alt="Jiukisidian Logo" 
-                    style={{
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'contain',
-                        borderRadius: '6px',
-                        filter: activeTool === 'select' ? 'none' : 'grayscale(0.5)'
-                    }} 
-                />
+                {children}
             </button>
 
-            {isMainMenuOpen && (
-                <div className="jiuk-dropdown-menu">
-                    <div className="jiuk-menu-label">Exportar</div>
-                    <button className="jiuk-menu-item" onClick={() => MenuLogic.exportCanvas(editor, 'png')}>
-                        <Download size={18} /> PNG
-                    </button>
-                    <button className="jiuk-menu-item" onClick={() => MenuLogic.exportCanvas(editor, 'pdf')}>
-                        <Download size={18} /> PDF
-                    </button>
-                    <button className="jiuk-menu-item" onClick={() => MenuLogic.exportCanvas(editor, 'json')}>
-                        <Download size={18} /> JSON
-                    </button>
-
-                    <div className="jiuk-menu-label">Aparência</div>
-                    <div style={{display:'flex', padding:'0 12px', gap:4}}>
-                        <button className="jiuk-menu-item" style={{justifyContent:'center'}} title="Claro" onClick={() => MenuLogic.setTheme(editor, 'light')}><Sun size={18}/></button>
-                        <button className="jiuk-menu-item" style={{justifyContent:'center'}} title="Escuro" onClick={() => MenuLogic.setTheme(editor, 'dark')}><Moon size={18}/></button>
-                        <button className="jiuk-menu-item" style={{justifyContent:'center', color:'#a855f7'}} title="Jiuk Mode" onClick={() => MenuLogic.setTheme(editor, 'jiuk')}><Monitor size={18}/></button>
-                    </div>
-
-                    <div className="jiuk-menu-label">Tamanho UI</div>
-                    <div style={{display:'flex', padding:'0 12px', gap:4}}>
-                        <button className={`jiuk-menu-item ${uiSize===24?'active':''}`} style={{justifyContent:'center'}} onClick={() => setUiSize(24)}>P</button>
-                        <button className={`jiuk-menu-item ${uiSize===28?'active':''}`} style={{justifyContent:'center'}} onClick={() => setUiSize(28)}>M</button>
-                        <button className={`jiuk-menu-item ${uiSize===32?'active':''}`} style={{justifyContent:'center'}} onClick={() => setUiSize(32)}>G</button>
-                    </div>
-
-                    <div className="jiuk-separator" style={{width:'100%', height:'1px', margin:'4px 0'}} />
-                    
-                    <button className="jiuk-menu-item" onClick={() => window.open('https://ko-fi.com/jiuk', '_blank')}>
-                        <Heart size={18} color="#fb7185" /> Apoiar o Projeto
-                    </button>
+            {isOpen && dropdownContent && (
+                <div 
+                    className="jiuk-dropdown-menu"
+                    style={{
+                        position: 'absolute',
+                        top: '115%', 
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        minWidth: 'max-content',
+                        zIndex: 400
+                    }}
+                    onClick={() => {
+                        if(onDropdownSelect) setIsOpen(false) 
+                    }}
+                >
+                    <div style={{position:'absolute', top:'-15px', left:0, right:0, height:'15px'}} />
+                    {dropdownContent}
                 </div>
             )}
         </div>
     )
+}
 
-    const ToolWithDropdown = ({ id, icon, tools }: any) => {
-        const isActive = activeTool === id || tools.some((t:any) => t.id === activeTool)
-        const currentTool = tools.find((t:any) => t.id === activeTool)
-        const displayIcon = currentTool ? currentTool.icon : icon
+export const TopCommandBar = track(() => {
+    const editor = useEditor()
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uiSize, setUiSize] = useState(32)
+    const [lastGeoShape, setLastGeoShape] = useState<string>('rectangle')
 
-        return (
-            <div 
-                style={{position: 'relative', display: 'flex', alignItems: 'center', height: '100%'}}
-                onMouseEnter={() => setActiveDropdown(id)}
-                onMouseLeave={() => setActiveDropdown(null)}
-            >
-                <div style={{display: 'flex', height: '100%', alignItems: 'center'}}>
-                    <button 
-                        className={`jiuk-icon-btn ${isActive ? 'active' : ''}`}
-                        style={{ borderRadius: '10px 0 0 10px', paddingRight: 4, width: 'auto', minWidth: 'calc(var(--ui-icon-size) + 12px)', borderRight: 'none' }}
-                        onClick={() => setTool(currentTool ? currentTool.id : tools[0].id)}
-                        title={id}
-                    >
-                        {displayIcon}
-                    </button>
-                    
-                    <div 
-                        className={`jiuk-icon-btn ${isActive ? 'active' : ''}`}
-                        style={{ 
-                            width: 20, 
-                            borderRadius: '0 10px 10px 0', 
-                            borderLeft: 'none', 
-                            padding: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: 0.6
-                        }}
-                    >
-                        <ChevronDown style={{ width: 14, height: 14 }} />
-                    </div>
-                </div>
+    const currentToolId = useValue('tool', () => editor.getCurrentToolId(), [editor])
+    
+    useEffect(() => {
+        MenuLogic.setUiScale(uiSize as any)
+    }, [uiSize])
 
-                {activeDropdown === id && (
-                    <div className="jiuk-dropdown-menu" style={{minWidth: 160}}>
-                        {tools.map((t: any) => (
-                            <button 
-                                key={t.id} 
-                                className={`jiuk-menu-item ${activeTool === t.id ? 'active' : ''}`}
-                                onClick={() => { setTool(t.id); setActiveDropdown(null) }}
-                            >
-                                {React.cloneElement(t.icon, { size: 18 })} <span style={{marginLeft: 8}}>{t.label}</span>
-                                {activeTool === t.id && <Check size={16} style={{marginLeft: 'auto'}}/>}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-        )
+    const setTool = (id: string) => editor.setCurrentTool(id)
+    
+    const setGeoShape = (geo: 'rectangle' | 'ellipse' | 'triangle' | 'diamond' | 'star') => {
+        setLastGeoShape(geo)
+        editor.setCurrentTool('geo')
+        
+        const selectedIds = editor.getSelectedShapeIds()
+        if (selectedIds.length > 0) {
+            editor.updateShapes(selectedIds.map(id => ({
+                id,
+                type: 'geo',
+                props: { geo }
+            } as any)))
+        }
+    }
+
+    const getGeoIcon = () => {
+        switch(lastGeoShape) {
+            case 'ellipse': return <Circle size={20} />
+            case 'triangle': return <Triangle size={20} />
+            case 'diamond': return <Diamond size={20} />
+            case 'star': return <Star size={20} />
+            default: return <Square size={20} />
+        }
     }
 
     return (
@@ -160,80 +122,123 @@ export const TopCommandBar = track(() => {
             transform: 'translateX(-50%)',
             zIndex: 300,
             display: 'flex',
-            gap: '16px',
+            gap: '12px',
             alignItems: 'flex-start'
         }}>
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={(e) => MenuLogic.handleImageUpload(editor, e.target.files?.[0])} />
 
             <div className="jiuk-ui-panel">
-                <MainMenu />
+                <ToolbarItem title="Menu Principal" dropdownContent={
+                    <>
+                        <div className="jiuk-menu-label">Exportar</div>
+                        <button className="jiuk-menu-item" onClick={() => MenuLogic.exportCanvas(editor, 'png')}><Download size={18} /> PNG</button>
+                        <button className="jiuk-menu-item" onClick={() => MenuLogic.exportCanvas(editor, 'pdf')}><Download size={18} /> PDF</button>
+                        <button className="jiuk-menu-item" onClick={() => MenuLogic.exportCanvas(editor, 'json')}><Download size={18} /> JSON</button>
+                        
+                        <div className="jiuk-menu-label">Aparência</div>
+                        <div style={{display:'flex', padding:'0 12px', gap:4}}>
+                            <button className="jiuk-menu-item" style={{justifyContent:'center'}} onClick={() => MenuLogic.setTheme(editor, 'light')}><Sun size={18}/></button>
+                            <button className="jiuk-menu-item" style={{justifyContent:'center'}} onClick={() => MenuLogic.setTheme(editor, 'dark')}><Moon size={18}/></button>
+                            <button className="jiuk-menu-item" style={{justifyContent:'center', color:'#a855f7'}} onClick={() => MenuLogic.setTheme(editor, 'jiuk')}><Monitor size={18}/></button>
+                        </div>
+
+                        <div className="jiuk-menu-label">Tamanho UI</div>
+                        <div style={{display:'flex', padding:'0 12px', gap:4}}>
+                            <button className={`jiuk-menu-item ${uiSize===24?'active':''}`} style={{justifyContent:'center'}} onClick={() => setUiSize(24)}>P</button>
+                            <button className={`jiuk-menu-item ${uiSize===28?'active':''}`} style={{justifyContent:'center'}} onClick={() => setUiSize(28)}>M</button>
+                            <button className={`jiuk-menu-item ${uiSize===32?'active':''}`} style={{justifyContent:'center'}} onClick={() => setUiSize(32)}>G</button>
+                        </div>
+                        
+                        <div className="jiuk-separator" style={{margin: '4px 0'}}/>
+                        <button className="jiuk-menu-item" onClick={() => window.open('https://ko-fi.com/jiuk', '_blank')}>
+                            <Heart size={18} color="#fb7185" /> Apoiar o Projeto
+                        </button>
+                    </>
+                }>
+                    <img src={JiukLogo} alt="Logo" style={{width: 24, height: 24, objectFit: 'contain'}} />
+                </ToolbarItem>
             </div>
 
             <div className="jiuk-ui-panel">
-                <button className="jiuk-icon-btn" onClick={() => editor.undo()} title="Desfazer"><Undo2 /></button>
-                <button className="jiuk-icon-btn" onClick={() => editor.redo()} title="Refazer"><Redo2 /></button>
+                <ToolbarItem onClick={() => editor.undo()} title="Desfazer"><Undo2 size={20}/></ToolbarItem>
+                <ToolbarItem onClick={() => editor.redo()} title="Refazer"><Redo2 size={20}/></ToolbarItem>
                 <div className="jiuk-separator" />
-                <button className="jiuk-icon-btn danger" onClick={() => editor.deleteShapes(editor.getSelectedShapeIds())} title="Deletar"><Trash2 /></button>
+                <ToolbarItem onClick={() => MenuLogic.rotateSelection(editor, -90)} title="Girar Esq."><RotateCcw size={20}/></ToolbarItem>
+                <ToolbarItem onClick={() => MenuLogic.rotateSelection(editor, 90)} title="Girar Dir."><RotateCw size={20}/></ToolbarItem>
+                <div className="jiuk-separator" />
+                <ToolbarItem onClick={() => editor.deleteShapes(editor.getSelectedShapeIds())} title="Deletar" active={false}>
+                    <Trash2 size={20} color="#ef4444" />
+                </ToolbarItem>
             </div>
 
             <div className="jiuk-ui-panel">
-                <button className={`jiuk-icon-btn ${activeTool === 'select' ? 'active' : ''}`} onClick={() => setTool('select')} title="Selecionar (V)"><MousePointer2 /></button>
-                <button className={`jiuk-icon-btn ${activeTool === 'hand' ? 'active' : ''}`} onClick={() => setTool('hand')} title="Mover (H)"><Hand /></button>
-                <button className={`jiuk-icon-btn ${activeTool === 'laser' ? 'active' : ''}`} onClick={() => setTool('laser')} title="Laser"><Wand2 /></button>
+                <ToolbarItem active={currentToolId === 'select'} onClick={() => setTool('select')} title="Selecionar (V)"><MousePointer2 size={20}/></ToolbarItem>
+                <ToolbarItem active={currentToolId === 'hand'} onClick={() => setTool('hand')} title="Mover (H)"><Hand size={20}/></ToolbarItem>
                 
                 <div className="jiuk-separator" />
                 
-                <ToolWithDropdown 
-                    id="draw-group" 
-                    icon={<Pen />} 
-                    tools={[
-                        {id: 'draw', label: 'Caneta', icon: <Pen />},
-                        {id: 'highlight', label: 'Marca-texto', icon: <Highlighter />},
-                    ]}
-                />
-
-                <button className={`jiuk-icon-btn ${activeTool === 'eraser' ? 'active' : ''}`} onClick={() => setTool('eraser')} title="Borracha (E)"><Eraser /></button>
-                
-                <div className="jiuk-separator" />
-                
-                <ToolWithDropdown 
-                    id="geo-group" 
-                    icon={<Square />} 
-                    tools={[
-                        {id: 'geo', label: 'Retângulo', icon: <Square />},
-                        {id: 'ellipse', label: 'Círculo', icon: <Circle />}, 
-                        {id: 'triangle', label: 'Triângulo', icon: <Triangle />},
-                        {id: 'diamond', label: 'Losango', icon: <Diamond />},
-                        {id: 'star', label: 'Estrela', icon: <Star />},
-                    ]}
-                />
-
-                <button className={`jiuk-icon-btn ${activeTool === 'arrow' ? 'active' : ''}`} onClick={() => setTool('arrow')} title="Seta"><MoveRight /></button>
-                <button className={`jiuk-icon-btn ${activeTool === 'line' ? 'active' : ''}`} onClick={() => setTool('line')} title="Linha"><Minus style={{transform: 'rotate(-45deg)'}} /></button>
-
-                <div className="jiuk-separator" />
-
-                <button className={`jiuk-icon-btn ${activeTool === 'text' ? 'active' : ''}`} onClick={() => setTool('text')} title="Texto"><Type /></button>
-                <button className={`jiuk-icon-btn ${activeTool === 'note' ? 'active' : ''}`} onClick={() => setTool('note')} title="Post-it"><StickyNote /></button>
-                <button className="jiuk-icon-btn" onClick={() => fileInputRef.current?.click()} title="Imagem"><ImageIcon /></button>
-                
-                <button 
-                    className={`jiuk-icon-btn ${editor.getCurrentToolId() === 'obsidian-note' ? 'active' : ''}`}
-                    onClick={() => MenuLogic.createJiukNote(editor)}
-                    title="Jiukisidian Note"
+                <ToolbarItem 
+                    active={currentToolId === 'draw' || currentToolId === 'highlight' || currentToolId === 'laser'} 
+                    onClick={() => setTool('draw')} 
+                    title="Desenho"
+                    dropdownContent={
+                        <>
+                            <button className={`jiuk-menu-item ${currentToolId === 'draw' ? 'active' : ''}`} onClick={() => setTool('draw')}><Pen size={18}/> Caneta</button>
+                            <button className={`jiuk-menu-item ${currentToolId === 'highlight' ? 'active' : ''}`} onClick={() => setTool('highlight')}><Highlighter size={18}/> Marca-texto</button>
+                            <button className={`jiuk-menu-item ${currentToolId === 'laser' ? 'active' : ''}`} onClick={() => setTool('laser')}><Wand2 size={18}/> Laser</button>
+                        </>
+                    }
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {currentToolId === 'highlight' ? <Highlighter size={20}/> : currentToolId === 'laser' ? <Wand2 size={20}/> : <Pen size={20}/>}
+                </ToolbarItem>
+
+                <ToolbarItem active={currentToolId === 'eraser'} onClick={() => setTool('eraser')} title="Borracha (E)"><Eraser size={20}/></ToolbarItem>
+                
+                <div className="jiuk-separator" />
+                
+                <ToolbarItem 
+                    active={currentToolId === 'geo'}
+                    onClick={() => setTool('geo')} 
+                    title="Formas"
+                    dropdownContent={
+                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap: 4, padding: 4}}>
+                            <button className={`jiuk-icon-btn ${lastGeoShape==='rectangle'?'active':''}`} onClick={() => setGeoShape('rectangle')}><Square size={18}/></button>
+                            <button className={`jiuk-icon-btn ${lastGeoShape==='ellipse'?'active':''}`} onClick={() => setGeoShape('ellipse')}><Circle size={18}/></button>
+                            <button className={`jiuk-icon-btn ${lastGeoShape==='triangle'?'active':''}`} onClick={() => setGeoShape('triangle')}><Triangle size={18}/></button>
+                            <button className={`jiuk-icon-btn ${lastGeoShape==='diamond'?'active':''}`} onClick={() => setGeoShape('diamond')}><Diamond size={18}/></button>
+                            <button className={`jiuk-icon-btn ${lastGeoShape==='star'?'active':''}`} onClick={() => setGeoShape('star')}><Star size={18}/></button>
+                        </div>
+                    }
+                >
+                    {getGeoIcon()}
+                </ToolbarItem>
+
+                <ToolbarItem active={currentToolId === 'arrow'} onClick={() => setTool('arrow')} title="Seta"><MoveRight size={20}/></ToolbarItem>
+                <ToolbarItem active={currentToolId === 'line'} onClick={() => setTool('line')} title="Linha"><Minus size={20} style={{transform: 'rotate(-45deg)'}}/></ToolbarItem>
+
+                <div className="jiuk-separator" />
+
+                <ToolbarItem active={currentToolId === 'text'} onClick={() => setTool('text')} title="Texto"><Type size={20}/></ToolbarItem>
+                <ToolbarItem active={currentToolId === 'note'} onClick={() => setTool('note')} title="Post-it"><StickyNote size={20}/></ToolbarItem>
+                <ToolbarItem onClick={() => fileInputRef.current?.click()} title="Imagem"><ImageIcon size={20}/></ToolbarItem>
+                
+                <ToolbarItem 
+                    active={currentToolId === 'obsidian-note'}
+                    onClick={() => MenuLogic.createJiukNote(editor)}
+                    title="Jiuk Note"
+                >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                         <circle cx="10" cy="13" r="2" />
                     </svg>
-                </button>
+                </ToolbarItem>
             </div>
             
             <div className="jiuk-ui-panel">
-                <button className="jiuk-icon-btn" onClick={() => editor.zoomIn()} title="Zoom In"><ZoomIn /></button>
-                <button className="jiuk-icon-btn" onClick={() => editor.zoomOut()} title="Zoom Out"><ZoomOut /></button>
+                <ToolbarItem onClick={() => editor.zoomIn()} title="Zoom In"><ZoomIn size={20}/></ToolbarItem>
+                <ToolbarItem onClick={() => editor.zoomOut()} title="Zoom Out"><ZoomOut size={20}/></ToolbarItem>
             </div>
         </div>
     )
-}) 
+})

@@ -1,35 +1,65 @@
 :root {
     --bg-deep: #09090b;
-    --bg-surface: #18181b;
-    --bg-surface-hover: #27272a;
-    --border: #27272a;
+    --bg-surface: rgba(24, 24, 27, 0.85);
+    --bg-surface-hover: rgba(39, 39, 42, 0.8);
+    --bg-surface-active: rgba(168, 85, 247, 0.15);
+    
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(168, 85, 247, 0.3);
+    
     --primary: #a855f7;
-    --primary-glow: rgba(168, 85, 247, 0.5);
+    --primary-glow: rgba(168, 85, 247, 0.4);
+    
     --accent-pink: #fb7185;
+    --accent-green: #4ade80;
     --accent-yellow: #fde047;
+    
     --text-main: #f4f4f5;
     --text-muted: #a1a1aa;
-    --ui-icon-size: 32px;
+    
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.25);
+    
+    --ui-radius: 12px;
+    --ui-icon-size: 24px;
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Tema Claro --- */
+[data-theme="light"] {
+    --bg-deep: #f8fafc;
+    --bg-surface: rgba(255, 255, 255, 0.9);
+    --bg-surface-hover: #f1f5f9;
+    --bg-surface-active: rgba(168, 85, 247, 0.1);
+    --border: rgba(0, 0, 0, 0.08);
+    --text-main: #18181b;
+    --text-muted: #71717a;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 body {
     background-color: var(--bg-deep);
     margin: 0;
     overflow: hidden;
+    font-family: var(--font-ui);
+    color: var(--text-main);
+    transition: background-color 0.3s ease;
 }
 
+/* --- Overrides do Tldraw --- */
 .tl-container {
     --color-background: var(--bg-deep);
     --color-primary: var(--primary);
     --color-text: var(--text-main);
     --color-panel-bg: var(--bg-surface);
-    --tl-font-draw: 'Inter', sans-serif;
 }
 
 .tl-canvas {
     background-color: var(--bg-deep);
 }
 
+/* Esconde UI padrão do Tldraw */
 div[class*="watermark"], 
 div[class*="debug-panel"],
 div[data-testid="page-menu"],
@@ -42,101 +72,113 @@ a[href*="tldraw"] {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    position: absolute !important;
-    z-index: -9999 !important;
 }
 
+/* --- Painéis da UI (Barra Superior, Menus) --- */
 .jiuk-ui-panel {
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    padding: 8px;
+    border-radius: var(--ui-radius);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 6px;
     display: flex;
     gap: 4px;
     align-items: center;
     pointer-events: all;
+    transition: all 0.2s ease;
 }
 
+.jiuk-ui-panel:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-lg);
+}
+
+/* --- Botões da Toolbar --- */
 .jiuk-icon-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: calc(var(--ui-icon-size) + 16px);
-    height: calc(var(--ui-icon-size) + 16px);
-    border-radius: 10px;
-    border: none;
+    width: calc(var(--ui-icon-size) + 12px);
+    height: calc(var(--ui-icon-size) + 12px);
+    border-radius: 8px;
+    border: 1px solid transparent;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-}
-
-.jiuk-icon-btn svg {
-    width: var(--ui-icon-size);
-    height: var(--ui-icon-size);
+    padding: 0;
 }
 
 .jiuk-icon-btn:hover {
     background: var(--bg-surface-hover);
     color: var(--text-main);
-    transform: translateY(-2px);
 }
 
 .jiuk-icon-btn.active {
-    background: rgba(168, 85, 247, 0.15);
+    background: var(--bg-surface-active);
     color: var(--primary);
-    border: 1px solid var(--primary);
-    box-shadow: 0 0 16px var(--primary-glow);
+    border-color: rgba(168, 85, 247, 0.2);
 }
 
-.jiuk-icon-btn.danger:hover {
-    color: var(--accent-pink);
-    background: rgba(251, 113, 133, 0.1);
+.jiuk-icon-btn svg {
+    stroke-width: 2px;
+    transition: transform 0.2s;
 }
 
+.jiuk-icon-btn:active svg {
+    transform: scale(0.9);
+}
+
+/* --- Separador --- */
 .jiuk-separator {
     width: 1px;
-    height: calc(var(--ui-icon-size) + 4px);
+    height: 24px;
     background: var(--border);
-    margin: 0 4px;
+    margin: 0 6px;
 }
 
+/* --- Menu Dropdown --- */
 .jiuk-dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 8px);
     left: 0;
-    margin-top: 8px;
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--ui-radius);
     padding: 6px;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 200px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    min-width: 220px;
+    box-shadow: var(--shadow-lg);
     z-index: 1000;
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .jiuk-menu-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 8px 12px;
     color: var(--text-main);
-    font-size: 14px;
-    border-radius: 8px;
+    font-size: 13px;
+    border-radius: 6px;
     cursor: pointer;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     text-align: left;
     width: 100%;
     font-weight: 500;
+    transition: all 0.15s ease;
 }
 
 .jiuk-menu-item:hover {
@@ -145,87 +187,95 @@ a[href*="tldraw"] {
 }
 
 .jiuk-menu-item.active {
-    background: rgba(168, 85, 247, 0.2);
+    background: var(--bg-surface-active);
     color: var(--primary);
+    font-weight: 600;
 }
 
 .jiuk-menu-label {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     color: var(--text-muted);
     padding: 12px 12px 6px;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
 }
 
-.jiuk-chevron-btn {
-    width: 20px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 0 10px 10px 0;
-    opacity: 0.5;
-    transition: all 0.2s;
-}
-
-.jiuk-chevron-btn:hover {
-    background: rgba(255,255,255,0.1);
-    opacity: 1;
-}
-
+/* --- Cartão "Jiuk Note" --- */
 .obsidian-card {
     display: flex;
     flex-direction: column;
-    background: rgba(24, 24, 27, 0.95);
+    background: #1e1e1e;
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-md);
     transition: all 0.2s ease;
     overflow: hidden;
+    height: 100%;
 }
 
 .tl-selected .obsidian-card {
     border-color: var(--primary);
-    box-shadow: 0 0 25px var(--primary-glow);
+    box-shadow: 0 0 0 2px var(--primary);
 }
 
 .obsidian-header {
-    height: 40px;
-    background: rgba(39, 39, 42, 0.4);
+    height: 36px;
+    background: #27272a;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    padding: 0 16px;
-    cursor: grab;
-    backdrop-filter: blur(5px);
+    padding: 0 12px;
+    gap: 8px;
+    user-select: none;
 }
 
-.obsidian-header:active {
-    cursor: grabbing;
-}
-
+/* Botões estilo Mac */
 .circle-btn {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    margin-right: 8px;
 }
 
-.drag-handle {
-    cursor: grab;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0.6;
-    transition: opacity 0.2s;
+/* --- Estilização do Conteúdo de Texto (Prose) --- */
+.prose {
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.6;
 }
 
-.drag-handle:hover {
-    opacity: 1;
+.prose h1 { font-size: 1.5em; font-weight: 700; margin-bottom: 0.5em; color: var(--primary); }
+.prose h2 { font-size: 1.25em; font-weight: 600; margin-bottom: 0.5em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.prose ul { padding-left: 1.2em; margin: 0.5em 0; }
+.prose blockquote { border-left: 3px solid var(--primary); padding-left: 1em; color: var(--text-muted); font-style: italic; }
+.prose code { background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.9em; color: var(--accent-pink); }
+
+/* --- Scrollbars Bonitas --- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
 
-.drag-handle:active {
-    cursor: grabbing;
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Utilitários de Animação --- */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
