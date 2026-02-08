@@ -1,0 +1,35 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <radialGradient id="bg-gradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 256) rotate(90) scale(512)">
+            <stop stop-color="#2e1065" /> <stop offset="1" stop-color="#09090b" /> </radialGradient>
+
+        <linearGradient id="jiuk-gradient" x1="80" y1="120" x2="320" y2="420" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#a855f7" /> <stop offset="50%" stop-color="#d946ef" /> <stop offset="100%" stop-color="#fb7185" /> </linearGradient>
+
+        <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="20" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+    </defs>
+    
+    <rect width="512" height="512" rx="120" fill="url(#bg-gradient)" />
+    
+    <g stroke="#a855f7" stroke-width="4" opacity="0.2" stroke-linecap="round">
+        <line x1="320" y1="120" x2="420" y2="80" />
+        <line x1="320" y1="220" x2="400" y2="220" />
+        <circle cx="420" cy="80" r="6" fill="#a855f7" />
+    </g>
+
+    <path 
+        d="M320 120 V300 C320 366.274 266.274 420 200 420 C133.726 420 80 366.274 80 300" 
+        stroke="url(#jiuk-gradient)" 
+        stroke-width="60" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        filter="url(#glow)"
+    />
+    
+    <circle cx="320" cy="120" r="32" fill="#fde047" filter="url(#glow)"/>
+    
+    <circle cx="200" cy="420" r="24" fill="#fb7185" />
+</svg>
