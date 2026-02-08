@@ -5,7 +5,7 @@ import './theme/jiukisidian.css'
 import { JiukisidianNoteUtil } from './components/JiukisidianShape'
 import { TopCommandBar } from './components/UiComponents'
 import { FloatingPanel } from './components/FloatingPanel'
-import { Trash2, RefreshCcw } from 'lucide-react'
+import { Trash2, RefreshCcw, AlertTriangle } from 'lucide-react'
 
 const customShapeUtils = [JiukisidianNoteUtil]
 
@@ -29,21 +29,25 @@ const options: Partial<TldrawOptions> = {
 
 class JiukErrorBoundary extends React.Component<
     { children: React.ReactNode },
-    { hasError: boolean; error: Error | null }
+    { hasError: boolean; error: Error | null; errorInfo: any }
 > {
     constructor(props: { children: React.ReactNode }) {
         super(props)
-        this.state = { hasError: false, error: null }
+        this.state = { hasError: false, error: null, errorInfo: null }
     }
 
     static getDerivedStateFromError(error: Error) {
         return { hasError: true, error }
     }
 
+    componentDidCatch(error: Error, errorInfo: any) {
+        console.error("Jiukisidian Crash:", error, errorInfo)
+        this.setState({ errorInfo })
+    }
+
     handleHardReset = () => {
-        localStorage.removeItem('jiukisidian-pro-v1')
-        localStorage.removeItem('jiukisidian-v2')
         localStorage.clear()
+        sessionStorage.clear()
         window.location.reload()
     }
 
@@ -61,57 +65,75 @@ class JiukErrorBoundary extends React.Component<
                     justifyContent: 'center',
                     fontFamily: 'Inter, sans-serif',
                     gap: '24px',
-                    zIndex: 9999
+                    zIndex: 9999,
+                    padding: '20px',
+                    textAlign: 'center'
                 }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px', color: '#fb7185' }}>
-                            Reinicialização Necessária
+                    <div style={{ maxWidth: '600px', background: '#18181b', padding: '32px', borderRadius: '16px', border: '1px solid #27272a' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                            <AlertTriangle size={48} color="#ef4444" />
+                        </div>
+                        
+                        <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px', color: '#f4f4f5' }}>
+                            Ocorreu um erro na renderização
                         </h2>
-                        <p style={{ color: '#a1a1aa', maxWidth: '400px', lineHeight: '1.5' }}>
-                            Detectamos um conflito com dados antigos salvos no navegador.
-                            Por favor, limpe os dados para continuar.
-                        </p>
-                    </div>
 
-                    <button 
-                        onClick={this.handleHardReset}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 24px',
-                            background: '#a855f7',
-                            border: 'none',
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)'
-                        }}
-                    >
-                        <Trash2 size={20} />
-                        Limpar Dados e Reiniciar
-                    </button>
-                    
-                    <button 
-                        onClick={() => window.location.reload()}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '8px 16px',
-                            background: 'transparent',
-                            border: '1px solid #333',
-                            borderRadius: '8px',
-                            color: '#a1a1aa',
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                        }}
-                    >
-                        <RefreshCcw size={16} />
-                        Tentar Recarregar
-                    </button>
+                        {/* EXIBINDO O ERRO REAL PARA DIAGNÓSTICO */}
+                        <div style={{ 
+                            background: '#27272a', 
+                            padding: '12px', 
+                            borderRadius: '8px', 
+                            color: '#fb7185', 
+                            fontFamily: 'monospace', 
+                            fontSize: '12px', 
+                            textAlign: 'left',
+                            marginBottom: '24px',
+                            overflowX: 'auto',
+                            maxHeight: '150px'
+                        }}>
+                            {this.state.error?.toString() || "Erro desconhecido"}
+                            <br/>
+                            {this.state.errorInfo?.componentStack?.slice(0, 200)}...
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <button 
+                                onClick={this.handleHardReset}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 20px',
+                                    background: '#ef4444',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    color: 'white',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <Trash2 size={18} /> Reseta Tudo (Hard)
+                            </button>
+                            
+                            <button 
+                                onClick={() => window.location.reload()}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 20px',
+                                    background: '#3f3f46',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    color: 'white',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <RefreshCcw size={18} /> Recarregar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )
         }
@@ -125,7 +147,7 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
             <JiukErrorBoundary>
                 <Tldraw 
-                    persistenceKey="jiukisidian-v2"
+                    persistenceKey="jiukisidian-v3-debug"
                     shapeUtils={customShapeUtils}
                     components={components as any}
                     options={options}
