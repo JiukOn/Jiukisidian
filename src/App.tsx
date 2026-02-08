@@ -42,6 +42,8 @@ class JiukErrorBoundary extends React.Component<
 
     handleHardReset = () => {
         localStorage.removeItem('jiukisidian-pro-v1')
+        localStorage.removeItem('jiukisidian-v2')
+        localStorage.clear()
         window.location.reload()
     }
 
@@ -63,11 +65,11 @@ class JiukErrorBoundary extends React.Component<
                 }}>
                     <div style={{ textAlign: 'center' }}>
                         <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px', color: '#fb7185' }}>
-                            Erro Crítico no Sistema
+                            Reinicialização Necessária
                         </h2>
                         <p style={{ color: '#a1a1aa', maxWidth: '400px', lineHeight: '1.5' }}>
-                            Ocorreu um problema inesperado na renderização do canvas. 
-                            Isso geralmente ocorre devido a dados corrompidos na memória local.
+                            Detectamos um conflito com dados antigos salvos no navegador.
+                            Por favor, limpe os dados para continuar.
                         </p>
                     </div>
 
@@ -123,7 +125,7 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
             <JiukErrorBoundary>
                 <Tldraw 
-                    persistenceKey="jiukisidian-pro-v1"
+                    persistenceKey="jiukisidian-v2"
                     shapeUtils={customShapeUtils}
                     components={components as any}
                     options={options}
