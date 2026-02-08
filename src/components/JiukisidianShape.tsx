@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
-import { HTMLContainer, ShapeUtil, Rectangle2d } from 'tldraw'
+import { useEffect, useCallback } from 'react'
+import { HTMLContainer, ShapeUtil, Rectangle2d, useEditor } from 'tldraw'
 import { useEditor as useTiptap, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { TextStyle } from '@tiptap/extension-text-style'
+import TextStyle from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
-import { TextAlign } from '@tiptap/extension-text-align'
+import TextAlign from '@tiptap/extension-text-align'
 
 export class JiukisidianNoteUtil extends ShapeUtil<any> {
     static override type = 'obsidian-note' as const
@@ -37,20 +37,11 @@ export class JiukisidianNoteUtil extends ShapeUtil<any> {
     }
 
     override component(shape: any) {
-        const handleUpdate = (newText: string) => {
-            this.editor.updateShape({
-                id: shape.id,
-                type: 'obsidian-note' as any,
-                props: { text: newText },
-            })
-        }
-
         return (
             <HTMLContainer style={{ pointerEvents: 'all' }}>
                 <ObsidianCard 
                     id={shape.id}
                     text={shape.props.text} 
-                    onUpdate={handleUpdate} 
                 />
             </HTMLContainer>
         )
@@ -61,7 +52,17 @@ export class JiukisidianNoteUtil extends ShapeUtil<any> {
     }
 }
 
-const ObsidianCard = ({ id, text, onUpdate }: any) => {
+const ObsidianCard = ({ id, text }: any) => {
+    const editorApp = useEditor()
+
+    const handleUpdate = useCallback((newText: string) => {
+        editorApp.updateShape({
+            id: id,
+            type: 'obsidian-note',
+            props: { text: newText },
+        })
+    }, [editorApp, id])
+
     const editor = useTiptap({
         extensions: [
             StarterKit,
@@ -70,7 +71,7 @@ const ObsidianCard = ({ id, text, onUpdate }: any) => {
             TextAlign.configure({ types: ['heading', 'paragraph'] })
         ],
         content: text,
-        onUpdate: ({ editor }) => onUpdate(editor.getHTML()),
+        onUpdate: ({ editor }) => handleUpdate(editor.getHTML()),
         editorProps: {
             attributes: {
                 class: 'prose prose-invert',
